@@ -15,19 +15,19 @@ Y="\e[33m"
 N="\e[0m"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
-trap 'echo "error at $LINEND", command: $BASH_COMMAND"' ERR
+trap 'echo "error at $LINENO", command: $BASH_COMMAND"' ERR
 
 #check root access or not
 if [ $USERID -ne 0 ]; then
-    echo -e "${R}please run this script with root access
+    echo -e "${R}please run this script with root access"
     exit 1
 fi
 
 VALIDATE(){
     if [ $1 -ne 0 ]; then
-     echo -e $2 ... $R [FAILED] $N" | tee -a $LOGS_FILE
+     echo -e "$2 ... $R [FAILED] $N" | tee -a $LOGS_FILE
     else
-     echo -e $2 ... $G [SUCCESS] $N" | tee -a $LOGS_FILE
+     echo -e "$2 ... $G [SUCCESS] $N" | tee -a $LOGS_FILE
     fi
 }
 
