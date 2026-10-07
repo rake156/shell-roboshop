@@ -18,7 +18,7 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 trap 'echo "error at $LINENO", command: $BASH_COMMAND"' ERR
 
 #check root access or not
-if [ $USERID -ne 0 ]; then
+if [ $USER_ID -ne 0 ]; then
     echo -e "${R}please run this script with root access"
     exit 1
 fi
