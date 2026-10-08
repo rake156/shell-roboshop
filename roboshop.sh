@@ -2,7 +2,7 @@
 
 AMI_ID="ami-0220d79f3f480ecf5"
 ZONE_ID="Z0702543JR335XUHBX9I" # replace with your zone ID
-DOMAIN_NAME=rakesh08.online # replace with your domain name
+DOMAIN_NAME=rakesh08.online # replace with your domain
 
 for instance in $@
 do
