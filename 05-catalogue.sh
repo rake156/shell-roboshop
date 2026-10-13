@@ -66,7 +66,7 @@ VALIDATE $? "reloading systemd"
 cp $SCRIPTS_DIR/mongo.repo /etc/yum.repos.d/mongo.repo
 VALIDATE $? "adding mongo repo"
 
-dnf install mongodb-mongosh -y &>>$LOGS_FILE
+dnf install mongodb-mongosh -y
 VALIDATE $? "installing mongodb client"
 
 INDEX=$(mongosh --host mongodb.rakesh08.online --quiet --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
