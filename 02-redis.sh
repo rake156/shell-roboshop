@@ -34,11 +34,11 @@ VALIDATE(){
 dnf module disable redis -y &>>$LOGS_FILE
 dnf module enable redis:7 -y &>>$LOGS_FILE
 dnf install redis -y &>>$LOGS_FILE
-VALIDATE $? "Installing redis:7"
+VALIDATE $? "Installing redis:7" | tee -a $LOGS_FILE
 
 sed -i -e 's/127.0.0.1/0.0.0.0/g' -e '/protected-mode/ c protected-mode no' /etc/redis/redis.conf
-VALIDATE $? "Allowing remote connections to redis"
+VALIDATE $? "Allowing remote connections to redis" | tee -a $LOGS_FILE
 
 systemctl enable redis
 systemctl start redis
-VALIDATE $? "starting and enabling redis service"
+VALIDATE $? "starting and enabling redis service" | tee -a $LOGS_FILE
