@@ -69,10 +69,10 @@ VALIDATE $? "adding mongo repo"
 dnf install mongodb-mongosh -y &>>$LOGS_FILE
 VALIDATE $? "installing mongodb client"
 
-INDEX=$(mongosh --host mongodb-rakesh08.shop --quiet --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+INDEX=$(mongosh --host mongodb-rakesh08.online --quiet --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
 
 if [ $INDEX -lt 0 ]; then
-    mongosh --host mongodb-rakesh08.shop </app/db/master-data.js &>>$LOGS_FILE
+    mongosh --host mongodb-rakesh08.online </app/db/master-data.js &>>$LOGS_FILE
     VALIDATE $? "loading catalogue schema"
 else
     echo -e "catalogue schema already loaded ... $Y [SKIPPING] $N" | tee -a $LOGS_FILE
