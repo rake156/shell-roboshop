@@ -51,9 +51,9 @@ cd /usr/share/nginx/html
 unzip -o /tmp/frontend.zip &>>$LOGS_FILE
 VALIDATE $? "extracting frontend application content"
 
-cp $SCRIPTS_DIR/frontend.service /etc/systemd/system/frontend.service
-VALIDATE $? "copying frontend service file"
+cp $SCRIPTS_DIR/nginx.conf /etc/nginx/nginx.conf
+VALIDATE $? "copying nginx configuration file"
 
-systemctl enable frontend &>>$LOGS_FILE
-systemctl restart frontend &>>$LOGS_FILE
-VALIDATE $? "starting and enabling frontend service"
+systemctl enable nginx &>>$LOGS_FILE
+systemctl restart nginx &>>$LOGS_FILE
+VALIDATE $? "starting and enabling nginx service"
