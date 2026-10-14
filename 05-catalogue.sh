@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SCRIPTS_DIR=$PWD   # must be set before any cd, used to find mongo.repo and catalogue.service
+SCRIPTS_DIR=$PWD   # must be set before any cd, used to find mongo.repo and cart.service
 
 LOGS_FOLDER="/var/log/roboshop"
 sudo mkdir -p $LOGS_FOLDER
@@ -47,18 +47,18 @@ fi
 mkdir -p /app &>>$LOGS_FILE
 VALIDATE $? "creating app directory"
 
-curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>>$LOGS_FILE
-VALIDATE $? "downloading catalogue application"
+curl -o /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip &>>$LOGS_FILE
+VALIDATE $? "downloading cart application"
 
 cd /app
-unzip -o /tmp/catalogue.zip &>>$LOGS_FILE
-VALIDATE $? "extracting catalogue application content"
+unzip -o /tmp/cart.zip &>>$LOGS_FILE
+VALIDATE $? "extracting cart application content"
 
 npm install &>>$LOGS_FILE
 VALIDATE $? "installing nodejs dependencies"
 
-cp $SCRIPTS_DIR/catalogue.service /etc/systemd/system/catalogue.service
-VALIDATE $? "copying catalogue service file"
+cp $SCRIPTS_DIR/cart.service /etc/systemd/system/cart.service
+VALIDATE $? "copying cart service file"
 
 systemctl daemon-reload &>>$LOGS_FILE
 VALIDATE $? "reloading systemd"
@@ -66,18 +66,18 @@ VALIDATE $? "reloading systemd"
 cp $SCRIPTS_DIR/mongo.repo /etc/yum.repos.d/mongo.repo
 VALIDATE $? "adding mongo repo"
 
-dnf install mongodb-mongosh -y
+dnf install mongodb-mongosh
 VALIDATE $? "installing mongodb client"
 
-INDEX=$(mongosh --host mongodb.rakesh08.online --quiet --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+INDEX=$(mongosh --host mongodb.rakesh08.online --quiet --eval 'db.getMongo().getDBNames().indexOf("cart")')
 
 if [ $INDEX -lt 0 ]; then
     mongosh --host mongodb.rakesh08.online </app/db/master-data.js &>>$LOGS_FILE
-    VALIDATE $? "loading catalogue schema"
+    VALIDATE $? "loading cart schema"
 else
-    echo -e "catalogue schema already loaded ... $Y [SKIPPING] $N" | tee -a $LOGS_FILE
+    echo -e "cart schema already loaded ... $Y [SKIPPING] $N" | tee -a $LOGS_FILE
 fi
 
-systemctl enable catalogue &>>$LOGS_FILE
-systemctl restart catalogue &>>$LOGS_FILE
-VALIDATE $? "starting and enabling catalogue service"
+systemctl enable cart &>>$LOGS_FILE
+systemctl restart cart &>>$LOGS_FILE
+VALIDATE $? "starting and enabling cart service"
