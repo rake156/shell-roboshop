@@ -9,6 +9,7 @@ sudo chown -R ec2-user:ec2-user $LOGS_FOLDER
 sudo chmod -R 755 $LOGS_FOLDER
 LOGS_FILE="$LOGS_FOLDER/$(basename $0).log"
 MYSQL_HOST=mysql.rakesh08.online
+MYSQL_ROOT_PASSWORD='Roboshop@1'
 
 USER_ID=$(id -u)
 R="\e[31m"
