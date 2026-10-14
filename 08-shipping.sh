@@ -64,7 +64,7 @@ VALIDATE $? "copying shipping service file"
 dnf install mysql -y &>>$LOGS_FILE
 VALIDATE $? "installing mysql client"
 
-mysql -h $MYSQL_HOST -uroot -pRoboShop@1 -e "use cities" &>>$LOGS_FILE
+mysql -h $MYSQL_HOST -u root -pRoboShop@1 -e "use cities" &>>$LOGS_FILE
 if [ $? -ne 0 ]; then
     mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/schema.sql
     mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/app-user.sql
@@ -73,9 +73,6 @@ if [ $? -ne 0 ]; then
 else
     echo -e "shipping schema already loaded ... $Y [SKIPPING] $N"
 fi
-
-systemctl daemon-reload &>>$LOGS_FILE
-VALIDATE $? "reloading systemd"
 
 systemctl enable shipping &>>$LOGS_FILE
 systemctl restart shipping &>>$LOGS_FILE
