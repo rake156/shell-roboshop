@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SCRIPTS_DIR=$PWD   # must be set before any cd, used to find mongo.repo and catalogue.service
+SCRIPTS_DIR=$PWD   # must be set before any cd, used to find mongo.repo and payment.service
 
 LOGS_FOLDER="/var/log/roboshop"
 sudo mkdir -p $LOGS_FOLDER
@@ -32,10 +32,8 @@ VALIDATE(){
     fi
 }
 
-dnf module disable nodejs -y &>>$LOGS_FILE
-dnf module enable nodejs:20 -y &>>$LOGS_FILE
-dnf install nodejs -y &>>$LOGS_FILE
-VALIDATE $? "installing nodejs:20"
+dnf install python3 gcc python3-devel -y &>>$LOGS_FILE
+VALIDATE $? "installing python3 dependencies"
 
 if ! id roboshop &>>$LOGS_FILE; then
     useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>>$LOGS_FILE
@@ -47,37 +45,22 @@ fi
 mkdir -p /app &>>$LOGS_FILE
 VALIDATE $? "creating app directory"
 
-curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>>$LOGS_FILE
-VALIDATE $? "downloading catalogue application"
+curl -o /tmp/payment.zip https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip &>>$LOGS_FILE
+VALIDATE $? "downloading payment application"
 
 cd /app
-unzip -o /tmp/catalogue.zip &>>$LOGS_FILE
-VALIDATE $? "extracting catalogue application content"
+unzip -o /tmp/payment.zip &>>$LOGS_FILE
+VALIDATE $? "extracting payment application content"
 
-npm install &>>$LOGS_FILE
-VALIDATE $? "installing nodejs dependencies"
+pip3 install -r requirements.txt &>>$LOGS_FILE
+VALIDATE $? "installing python dependencies"
 
-cp $SCRIPTS_DIR/catalogue.service /etc/systemd/system/catalogue.service
-VALIDATE $? "copying catalogue service file"
+cp $SCRIPTS_DIR/payment.service /etc/systemd/system/payment.service
+VALIDATE $? "copying payment service file"
 
 systemctl daemon-reload &>>$LOGS_FILE
 VALIDATE $? "reloading systemd"
 
-cp $SCRIPTS_DIR/mongo.repo /etc/yum.repos.d/mongo.repo
-VALIDATE $? "adding mongo repo"
-
-dnf install mongodb-mongosh
-VALIDATE $? "installing mongodb client"
-
-INDEX=$(mongosh --host mongodb.rakesh08.online --quiet --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
-
-if [ $INDEX -lt 0 ]; then
-    mongosh --host mongodb.rakesh08.online </app/db/master-data.js &>>$LOGS_FILE
-    VALIDATE $? "loading catalogue schema"
-else
-    echo -e "catalogue schema already loaded ... $Y [SKIPPING] $N" | tee -a $LOGS_FILE
-fi
-
-systemctl enable catalogue &>>$LOGS_FILE
-systemctl restart catalogue &>>$LOGS_FILE
-VALIDATE $? "starting and enabling catalogue service"
+systemctl enable payment &>>$LOGS_FILE
+systemctl restart payment &>>$LOGS_FILE
+VALIDATE $? "starting and enabling payment service"
