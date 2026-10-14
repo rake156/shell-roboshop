@@ -9,6 +9,7 @@ sudo chown -R ec2-user:ec2-user $LOGS_FOLDER
 sudo chmod -R 755 $LOGS_FOLDER
 LOGS_FILE="$LOGS_FOLDER/$(basename $0).log"
 MYSQL_HOST=mysql.rakesh08.online
+# Must match the password set in 03-mysql.sh (note the lowercase "s")
 MYSQL_ROOT_PASSWORD='Roboshop@1'
 
 USER_ID=$(id -u)
@@ -67,12 +68,16 @@ VALIDATE $? "copying shipping service file"
 dnf install mysql -y &>>$LOGS_FILE
 VALIDATE $? "installing mysql client"
 
+# Make sure we can log in at all, so a login error is never mistaken for "database missing"
+mysql -h $MYSQL_HOST -uroot -p"$MYSQL_ROOT_PASSWORD" -e "select 1" &>>$LOGS_FILE
+VALIDATE $? "connecting to mysql server"
+
 # The check is the `if` condition itself, so its expected failure
 # (database not created yet) is handled here and never aborts the script.
-if ! mysql -h $MYSQL_HOST -uroot -pRoboShop@1 -e "use cities" &>>$LOGS_FILE; then
-    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/schema.sql &>>$LOGS_FILE &&
-    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/app-user.sql &>>$LOGS_FILE &&
-    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/master-data.sql &>>$LOGS_FILE
+if ! mysql -h $MYSQL_HOST -uroot -p"$MYSQL_ROOT_PASSWORD" -e "use cities" &>>$LOGS_FILE; then
+    mysql -h $MYSQL_HOST -uroot -p"$MYSQL_ROOT_PASSWORD" </app/db/schema.sql &>>$LOGS_FILE &&
+    mysql -h $MYSQL_HOST -uroot -p"$MYSQL_ROOT_PASSWORD" </app/db/app-user.sql &>>$LOGS_FILE &&
+    mysql -h $MYSQL_HOST -uroot -p"$MYSQL_ROOT_PASSWORD" </app/db/master-data.sql &>>$LOGS_FILE
     VALIDATE $? "data loaded"
 else
     echo -e "shipping schema already loaded ... $Y [SKIPPING] $N"
