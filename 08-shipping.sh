@@ -1,14 +1,13 @@
 #!/bin/bash
-set -e
 
-SCRIPTS_DIR=$PWD   # must be set before any cd, used to find mongo.repo and shipping.service
+# Must be set before any cd; used to find shipping.service
+SCRIPTS_DIR=$PWD
 
 LOGS_FOLDER="/var/log/roboshop"
 sudo mkdir -p $LOGS_FOLDER
 sudo chown -R ec2-user:ec2-user $LOGS_FOLDER
 sudo chmod -R 755 $LOGS_FOLDER
 LOGS_FILE="$LOGS_FOLDER/$(basename $0).log"
-SCRIPT_DIR=$PWD
 MYSQL_HOST=mysql.rakesh08.online
 
 USER_ID=$(id -u)
@@ -17,6 +16,7 @@ G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
+# Prints where a command failed. Not triggered for commands used in an `if` condition.
 trap 'echo "error at line $LINENO, command: $BASH_COMMAND"' ERR
 
 # check root access or not
@@ -55,8 +55,10 @@ unzip -o /tmp/shipping.zip &>>$LOGS_FILE
 VALIDATE $? "extracting shipping application content"
 
 mvn clean package &>>$LOGS_FILE
-mv target/shipping-1.0.jar shipping.jar
 VALIDATE $? "building shipping application"
+
+mv target/shipping-1.0.jar shipping.jar &>>$LOGS_FILE
+VALIDATE $? "renaming shipping jar"
 
 cp $SCRIPTS_DIR/shipping.service /etc/systemd/system/shipping.service
 VALIDATE $? "copying shipping service file"
@@ -64,16 +66,18 @@ VALIDATE $? "copying shipping service file"
 dnf install mysql -y &>>$LOGS_FILE
 VALIDATE $? "installing mysql client"
 
-mysql -h $MYSQL_HOST -u root -pRoboShop@1 -e "use cities" &>>$LOGS_FILE
-if [ $? -ne 0 ]; then
-    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/schema.sql
-    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/app-user.sql
-    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/master-data.sql
+# The check is the `if` condition itself, so its expected failure
+# (database not created yet) is handled here and never aborts the script.
+if ! mysql -h $MYSQL_HOST -uroot -pRoboShop@1 -e "use cities" &>>$LOGS_FILE; then
+    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/schema.sql &>>$LOGS_FILE &&
+    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/app-user.sql &>>$LOGS_FILE &&
+    mysql -h $MYSQL_HOST -uroot -pRoboShop@1 </app/db/master-data.sql &>>$LOGS_FILE
     VALIDATE $? "data loaded"
 else
     echo -e "shipping schema already loaded ... $Y [SKIPPING] $N"
 fi
 
+systemctl daemon-reload &>>$LOGS_FILE
 systemctl enable shipping &>>$LOGS_FILE
 systemctl restart shipping &>>$LOGS_FILE
 VALIDATE $? "starting and enabling shipping service"
