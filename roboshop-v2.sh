@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 AMI_ID="ami-0220d79f3f480ecf5"
@@ -26,7 +25,6 @@ if [ "$ACTION" != "create" ] && [ "$ACTION" != "delete" ]; then
     exit 1
 fi
 
-### Get running instance ID ###
 get_instance_id() {
     local name=$1
 
@@ -37,7 +35,6 @@ get_instance_id() {
         --output text
 }
 
-### Process instances ###
 for instance in "$@"
 do
     INSTANCE_ID=$(get_instance_id "$instance")
@@ -45,7 +42,6 @@ do
     if [ "$ACTION" = "create" ]; then
 
         if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
-
             echo "Launching Instance: roboshop-$instance"
 
             INSTANCE_ID=$(aws ec2 run-instances \
@@ -63,10 +59,8 @@ do
 
             echo "Launched Instance: $INSTANCE_ID"
 
-            # Wait until the instance is running
             aws ec2 wait instance-running --instance-ids "$INSTANCE_ID"
 
-            # Get IP and Route 53 record name
             if [ "$instance" = "frontend" ]; then
                 IP=$(aws ec2 describe-instances \
                     --instance-ids "$INSTANCE_ID" \
@@ -88,7 +82,6 @@ do
                 continue
             fi
 
-            # Create or update Route 53 A record
             aws route53 change-resource-record-sets \
                 --hosted-zone-id "$ZONE_ID" \
                 --change-batch "{
@@ -115,54 +108,15 @@ do
     elif [ "$ACTION" = "delete" ]; then
 
         if [ "$INSTANCE_ID" != "None" ] && [ -n "$INSTANCE_ID" ]; then
+            echo "Terminating roboshop-$instance: $INSTANCE_ID"
 
-            echo "Deleting roboshop-$instance: $INSTANCE_ID"
-
-            # Get the IP and matching DNS record
-            if [ "$instance" = "frontend" ]; then
-                IP=$(aws ec2 describe-instances \
-                    --instance-ids "$INSTANCE_ID" \
-                    --query 'Reservations[0].Instances[0].PublicIpAddress' \
-                    --output text)
-
-                R53_RECORD="$DOMAIN_NAME"
-            else
-                IP=$(aws ec2 describe-instances \
-                    --instance-ids "$INSTANCE_ID" \
-                    --query 'Reservations[0].Instances[0].PrivateIpAddress' \
-                    --output text)
-
-                R53_RECORD="$instance.$DOMAIN_NAME"
-            fi
-
-            # Remove the Route 53 record if its IP is available
-            if [ -n "$IP" ] && [ "$IP" != "None" ]; then
-                aws route53 change-resource-record-sets \
-                    --hosted-zone-id "$ZONE_ID" \
-                    --change-batch "{
-                        \"Comment\": \"Delete A record\",
-                        \"Changes\": [{
-                            \"Action\": \"DELETE\",
-                            \"ResourceRecordSet\": {
-                                \"Name\": \"$R53_RECORD\",
-                                \"Type\": \"A\",
-                                \"TTL\": 1,
-                                \"ResourceRecords\": [{
-                                    \"Value\": \"$IP\"
-                                }]
-                            }
-                        }]
-                    }"
-
-                echo "Route 53 delete requested for $R53_RECORD"
-            fi
-
-            # Terminate the EC2 instance
+            # Terminate EC2 only. Do not delete Route 53 records.
             aws ec2 terminate-instances \
                 --instance-ids "$INSTANCE_ID"
 
             if [ $? -eq 0 ]; then
                 echo "Termination requested for roboshop-$instance"
+                echo "Route 53 record preserved."
             else
                 echo "ERROR: Failed to terminate roboshop-$instance"
             fi
@@ -172,4 +126,5 @@ do
         fi
     fi
 done
+
 
