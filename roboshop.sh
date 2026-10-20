@@ -1,6 +1,6 @@
 #!/bin/bash
 
-AMI_ID="ami-0220d79f3f480ecf5"
+AMI_ID="ami-0eec78ea4cbaaf5bd"
 ZONE_ID="Z0702543JR335XUHBX9I" # replace with your zone ID
 DOMAIN_NAME=rakesh08.online # replace with your domain
 
@@ -9,7 +9,7 @@ do
     echo "Launching instance: $instance"
 
     INSTANCE_ID=$(aws ec2 run-instances \
-        --image-id ami-0220d79f3f480ecf5 \
+        --image-id ami-0eec78ea4cbaaf5bd \
         --instance-type t3.micro \
         --security-groups "roboshop-common" "roboshop-$instance" \
         --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=roboshop-$instance}]" \

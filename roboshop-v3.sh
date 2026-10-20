@@ -1,6 +1,6 @@
 #!/bin/bash
 
-AMI_ID="ami-0220d79f3f480ecf5"
+AMI_ID="ami-0eec78ea4cbaaf5bd"
 ZONE_ID="Z0702543JR335XUHBX9I"
 DOMAIN_NAME="rakesh08.online"
 
